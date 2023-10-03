@@ -33,6 +33,7 @@ The first simplification often made is the assumption that the mass of the leg i
 $$
 \dot{x}(t)=A(\psi)x(t)+B(r_1,r_2,...,r_n,\psi)u(t)
 $$
+
 where $\psi$ is the yaw angle of the robot, $r_i$ is the ith leg's endpoint position, and $u(t)$ is the input to the system including the ground forces at each leg and the gravitational force.
 
 
