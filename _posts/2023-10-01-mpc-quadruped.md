@@ -20,9 +20,28 @@ $$
 
 In this discrete formulation of the MPC problem, $x_t$ is the state variable, while $u_t$ is the control variable. In the cost function, the $p(x_H)$ term represents the terminal cost, while the $q(x_t, u_t)$ term represents the stage cost at each time point. $x_{t+1} = g(x_t, u_t)$ specifies the system dynamics, and $h(x_t, u_t)\leq0$ specifies the inequality constraints the state and control varialbes are subject to. $x_0 = x(0)$ specifies the initial state while $x_H \in X$ specifies the desired region $X$ the terminal state $x_H$ needs to be in at $t=H$ [3]. Together, the optimization problem searches for the optimal control over the horizon $H$ such that the state $x_t$ follows the system dynamics, while obeying the boundary conditions and the inequality constraints imposed on the state and control variable. 
 
-Specifically for quadruped robots, the usual formulation 
+For quadruped robots, the equation of motion or the dynamics model can be derived using the Lagrangian method given the generalized coordinate $q$
+
+$$
+D(q)\"{q}+C(q,\dot{q})\dot{q}+G(q)=J_M^T\tau-J_F^TF
+$$
+
+The choice of the generalized coordinate $q$, which is a vector, can include variables such as joint angles and the pose of the base of the robot (translation and orientation expressed in Euler angles or unit quaternion). On the left-hand side (LHS), $D(q)$ is the inertial matrix, $C(q,\dot{q})$ represents the Coriolis and centrifugal forces, and $G(q)$ represents the effect of the gravitational forces. On the right-hand side (RHS), $\tau$ and $F$ represent the joint torques and the ground reaction force repectively, while $J_M$ and $J_F$ are Jacobian matrices projecting $\tau$ and $F$ onto the space of $q$ [4]. For a typical quadruped robot, a single leg has 3 DOF, i.e., two DOF at the hip joint and 1 DOF at the elbow. The pose of the base of the robot can be represented as a vector in $\R^{6\times1}$ if Eular angles are used to present the orientation. Thus, generalized coordinate $q$ of the whole body dynamics has a dimension of $3\times4+6=18$. The high dimensionality of the equation as well as the intrinsic nonlinearity makes the MPC formulation difficult to tackle. As a result, often simplifications are made in terms of the dynamics equation.
+
+The first simplification often made is the assumption that the mass of the leg is neglectable compared to the mass of the base of the robot [5], which is often true for most present-day quadruped robot, e.g., MIT cheetah [6], despite that for biological organisms the leg mass could be important for generating the bending at the spine for more efficient galloping [5]. Nevetheless, neglecting the leg mass allows the formulation to focus solely on the base of the robot. A second common simplification makes the assumption that that contacts made between the leg and the ground are point contacts, and as such only forces but not torques can be generated at these contact points [6]. The description of the base's orientational dynamics can be further simplified if one further assumes small pitch and roll angles [6]. Together, it can be shown as in [6] that the system can be modeled as a linear time-varying system:
+
+$$
+\dot{x}(t)=A(\psi)x(t)+B(r_1,r_2,...,r_n,\psi)u(t)
+$$
+where $\psi$ is the yaw angle of the robot, $r_i$ is the ith leg's endpoint position, and $u(t)$ is the input to the system including the ground forces at each leg and the gravitational force.
+
+
 
 Reference: <br />
 [1]https://www.mathworks.com/help/mpc/gs/what-is-mpc.html <br />
-[2]Development of quadruped walking robots A review <br />
-[3]https://optimization.cbe.cornell.edu/index.php?title=Model_predictive_control
+[2]Biswal, P., & Mohanty, P. K. (2021). Development of quadruped walking robots: A review. Ain Shams Engineering Journal, 12(2), 2017-2031. <br />
+[3]https://optimization.cbe.cornell.edu/index.php?title=Model_predictive_control <br />
+[4]De Santos, P. G., Garcia, E., & Estremera, J. (2006). Quadrupedal locomotion: an introduction to the control of four-legged robots (Vol. 1). London: springer. <br />
+[5]Parra Ricaurte, E. A., Pareja, J., Dominguez, S., & Rossi, C. L. A. U. D. I. O. (2022). Comparison of leg dynamic models for quadrupedal robots with compliant backbone. Scientific Reports, 12(1), 14579. <br />
+[6]Di Carlo, J., Wensing, P. M., Katz, B., Bledt, G., & Kim, S. (2018, October). Dynamic locomotion in the mit cheetah 3 through convex model-predictive control. In 2018 IEEE/RSJ international conference on intelligent robots and systems (IROS) (pp. 1-9). IEEE.
+
