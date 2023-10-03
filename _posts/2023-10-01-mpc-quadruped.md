@@ -23,7 +23,7 @@ In this discrete formulation of the MPC problem, $x_t$ is the state variable, wh
 For quadruped robots, the equation of motion or the dynamics model can be derived using the Lagrangian method given the generalized coordinate $q$
 
 $$
-D(q)\"{q}+C(q,\dot{q})\dot{q}+G(q)=J_M^T\tau-J_F^TF
+D(q)\ddot{q}+C(q,\dot{q})\dot{q}+G(q)=J_M^T\tau-J_F^TF
 $$
 
 The choice of the generalized coordinate $q$, which is a vector, can include variables such as joint angles and the pose of the base of the robot (translation and orientation expressed in Euler angles or unit quaternion). On the left-hand side (LHS), $D(q)$ is the inertial matrix, $C(q,\dot{q})$ represents the Coriolis and centrifugal forces, and $G(q)$ represents the effect of the gravitational forces. On the right-hand side (RHS), $\tau$ and $F$ represent the joint torques and the ground reaction force repectively, while $J_M$ and $J_F$ are Jacobian matrices projecting $\tau$ and $F$ onto the space of $q$ [4]. For a typical quadruped robot, a single leg has 3 DOF, i.e., two DOF at the hip joint and 1 DOF at the elbow. The pose of the base of the robot can be represented as a vector in $\R^{6\times1}$ if Eular angles are used to present the orientation. Thus, generalized coordinate $q$ of the whole body dynamics has a dimension of $3\times4+6=18$. The high dimensionality of the equation as well as the intrinsic nonlinearity makes the MPC formulation difficult to tackle. As a result, often simplifications are made in terms of the dynamics equation.
