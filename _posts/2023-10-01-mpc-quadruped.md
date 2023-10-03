@@ -39,7 +39,7 @@ where $x$ is the state variable of the base's position and orientation, $\psi$ i
 Given this simplified model, the MPC problem can be defined as follows:
 
 $$
-\begin{alignat}{3}
+\begin{alignat}{4}
 &\!\min_{u,x} &\qquad& \sum_{t=0}^{H-1} \lVert x_{t+1}-x_{t+1, ref} \rVert _{Q_t} + \lVert u_t \rVert _{R_t} \\
 &\text{s.t.} &      & x_{t+1} = A_tx_t + B_tu_t, t \in T=\{0,1,...,H-1\} \\
 &            &      & \underbar c_t \leq C_t u_t \leq \bar c_t, t \in T \\
