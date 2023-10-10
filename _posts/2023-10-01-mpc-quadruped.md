@@ -39,10 +39,10 @@ where $x$ is the state variable of the base's position and orientation, $\psi$ i
 Given this simplified model, the MPC problem can be defined as follows:
 
 $$
-\begin{alignat}{4}
+\begin{alignat}{3}
 &\!\min_{u,x} &\qquad& \sum_{t=0}^{H-1} \lVert x_{t+1}-x_{t+1, ref} \rVert _{Q_t} + \lVert u_t \rVert _{R_t} \\
 &\text{s.t.} &      & x_{t+1} = A_tx_t + B_tu_t, t \in T=\{0,1,...,H-1\} \\
-&            &      & \underline{c_t} \leq C_t u_t \leq \bar c_t, t \in T \\
+&            &      & \underbar c_t \leq C_t u_t \leq \bar c_t, t \in T \\
 &            &      & D_tu_t=0, t \in T \\ 
 &            &      & x_0 = x(0) \\
 \end{alignat}
@@ -55,7 +55,34 @@ The above MPC problem is thus formulated to search for the optimal ground reacti
 ## Solving MPC
 Several methods exist for solving MPC problems. For example, Dynamic Programing (DP) can be used to solve a linear quadratic MPC problem with a linear time invariant (LTI) system [7]. The idea of the method is to recursively optimize over control input and the state variable backward in time such that it is solving a nested optimization problem. Suppose we start at the end of the horizon, i.e., $t=H$, and we optimize over $x(H)$ and the input $u(H-1)$. Then the original optimization problem becomes only a function of $x$ and $u$ up to $t=H-1$, and we can again apply the same approach to optimize over $x(H-1)$ and $u(H-2)$. Therefore, by moving recursively back in time, DP is able to solve the linear quadratic MPC with a LTI system. 
 
-However, for the time variant system as formulated in the above section, it is possible to solve the problem using Quadratic Programming (QP)
+However, for the time variant system as formulated in the above section, it is possible to solve the problem using Quadratic Programming (QP) through a technique called condensing [7]. Using the state transition equation in discrete time, the state variables can be eliminated from the optimization problem, and given the quadratic form of the objective function, the optimization can be directly performed over the sequence of control input using QP. If the constraints are also convex, the global optimal solution is guaranteed. 
+
+Another approach, in constrast to condensing, is to keep the state variables and the optimization is performed on both the state variables and the control input. This approach could prove to be more computationally efficient as it can exploit the sparsity structure in the matrices for solving the optimization problem [7]. A more recent study showed that it is possible to use the condensed approach but also exploit the sparsity structure through a change of variables [8].
+
+For example, in [6], using the simplified dynamics model that only focus on the center of mass of the robot, the authors are able to derive a linear MPC formulation that they could solve with a QP solver. With the predefined desired foot placement, gait, and centroid trajectory, the authors were able to show a wide range of possible behavior on the Cheetah robot, including trotting, jumtping, galloping, climbing stairs, etc. The MPC controller was able to make new predictions at a frequency between 25 and 50 Hz, showing the efficiency of the QP formulation [6].
+
+## Connection to Desicion Making in Robotics
+In MPC for quadruped robot walking, the desicions are made at the level of the 
+
+
+## Variants of MPC formulation
+The above formulations relies most importantly on the simplification of the full body dynamics to focus on the center-of-mass dynamics, which allows fast online planning. These methods still requires user to design the gait, contact timing, etc for the robot. On the other hand, it is possible to utilize whole body dynamics for MPC formulation, which can plan for both contact points and end effector trajectory. 
+
+For example, in [9], the authors formulate the MPC using the whole-body dynamics model of the robot, and the optimization problem is formulated in search of the optimal joint trajectories in the continuous time domain to ensure that the contact and other constraints are properly respected. To solve the infinite programming (IP), the authors used B-spline to parameterize joint trajectories such that the optimization is converted to a semi-infinite programming problem. To deal with the continuous constraints, the authors used Taylor series expansion to approximate these constraints. Finally, the authors used predefined motion and contact sequences that constitute several phases for motion planning, and the optimization is performed for each phase separately. Due to the high computation demand, the optimization was performed offline. The authors were able to demonstrate behaviors such as sitting on a chair, kicking ball, walking under constraints, etc.
+
+In contrast, in [10], the authors avoided formulating separate optimization formulation over different contact modes by using the **complementary constraints**. This is motivated both by how rigid body contact problems are handled in the computer graphics field as by the fact that the robot the arthors focused on is FastRunner, whose design involves many kinematic constraints that makes contact mode scheduling intractable. Specificially, the complementary constraints are of the following form:
+
+$$
+\phi(q) \geq 0 \\
+\lambda \geq 0 \\
+\phi(q)^T \lambda = 0
+$$
+
+where $q$ is the joint angles, $\phi(q)$ represents the distance from the end effector to the contact surface, and $\lambda$ is the contact force. The condition $\phi(q) \geq 0$ imposes the nonpenetrablility constraint, while the condition $\phi(q)^T \lambda = 0$ imposes that contact force can be non-zero only when contact distance is 0 and vice versa. Using the complementary constraint, the optimization problem is formulated as a Mathematical Program with Complementarity Constraints (MPCC) and solved using Sequential Quadratic Programming (SQP). The authors used this method to find the optimal sequence of contact mode for running in the FastRunner robot. 
+
+A third variant of the formulation considers both the dynamics of the robot as a single rigid body and the kinematics of the legs as the same time [11]. Thus, this approach considers the whole-body **kinodynamics** model and unlike in [6] where only the robot base trajectory and contact force are optimized, [11] incorporates the joint velocities in the optimization, and thus achieves a single-task formulation MPC, which does not require predefined gait which might depend on heuristics. This formulation is necessary especially since the authors were focusing on a quadruped robot where each leg is equipped with an actuated wheel, and by directly considering the forward kinematics of the legs, the rolling constraints of the wheels become tractable. Together, this formulation allows the authors to optimize under different contact modes through the same set of parameters, and the MPC problem was solved through a differential dynamic programming based algorithm. 
+
+The variants of MPC formulation presented in this section are by no means exhaustive, but they represent approaches that try to capture more realistic and accurate modeling of the robot, which allow more dynamic motions of the robot and at the same time reduce the need for human engineered gait sequence, contact time etc. However, as these formulations become more complex, solving them is more computational demanding especially for real-time applications.  
 
 
 
@@ -67,3 +94,7 @@ Reference: <br />
 [5]Parra Ricaurte, E. A., Pareja, J., Dominguez, S., & Rossi, C. L. A. U. D. I. O. (2022). Comparison of leg dynamic models for quadrupedal robots with compliant backbone. Scientific Reports, 12(1), 14579. <br />
 [6]Di Carlo, J., Wensing, P. M., Katz, B., Bledt, G., & Kim, S. (2018, October). Dynamic locomotion in the mit cheetah 3 through convex model-predictive control. In 2018 IEEE/RSJ international conference on intelligent robots and systems (IROS) (pp. 1-9). IEEE. <br />
 [7]Garcia, C. E., Prett, D. M., & Morari, M. (1989). Model predictive control: Theory and practice—A survey. Automatica, 25(3), 335-348. <br />
+[8]Jerez, J. L., Kerrigan, E. C., & Constantinides, G. A. (2011, December). A condensed and sparse QP formulation for predictive control. In 2011 50th IEEE Conference on Decision and Control and European Control Conference (pp. 5217-5222). IEEE. <br />
+[9]Lengagne, S., Vaillant, J., Yoshida, E., & Kheddar, A. (2013). Generation of whole-body optimal dynamic multi-contact motions. The International Journal of Robotics Research, 32(9-10), 1104-1119. <br />
+[10]Posa, M., Cantu, C., & Tedrake, R. (2014). A direct method for trajectory optimization of rigid bodies through contact. The International Journal of Robotics Research, 33(1), 69-81. <br />
+[11]Bjelonic, M., Grandia, R., Harley, O., Galliard, C., Zimmermann, S., & Hutter, M. (2021, September). Whole-body mpc and online gait sequence generation for wheeled-legged robots. In 2021 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS) (pp. 8388-8395). IEEE. <br />
