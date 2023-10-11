@@ -42,13 +42,13 @@ $$
 \begin{alignat}{3}
 &\!\min_{u,x} &\qquad& \sum_{t=0}^{H-1} \lVert x_{t+1}-x_{t+1, ref} \rVert _{Q_t} + \lVert u_t \rVert _{R_t} \\
 &\text{s.t.} &      & x_{t+1} = A_tx_t + B_tu_t, t \in T=\{0,1,...,H-1\} \\
-&            &      & \underbar c_t \leq C_t u_t \leq \bar c_t, t \in T \\
+&            &      & \underline c_t \leq C_t u_t \leq \bar c_t, t \in T \\
 &            &      & D_tu_t=0, t \in T \\ 
 &            &      & x_0 = x(0) \\
 \end{alignat}
 $$
 
-Here, $x_{t, ref}$ is the reference trajectory, and $Q_t$ and $R_t$ are diagonal positive semidefinite matrices for calculating the weighted norm of the error between the state $x(t)$ and the reference trajectory and the regularization on the control signal $u(t)$. The inequality constraint $ \underbar c_t \leq C_t u_t \leq \bar c_t$ represents the constraint that the ground reaction force must lie within the friction cone and thus is realizable. Finally, matrix $D_t$ is a selection matrix enforcing the swing leg, which is not in contact with the ground, to have 0 ground reaction force. 
+Here, $x_{t, ref}$ is the reference trajectory, and $Q_t$ and $R_t$ are diagonal positive semidefinite matrices for calculating the weighted norm of the error between the state $x(t)$ and the reference trajectory and the regularization on the control signal $u(t)$. The inequality constraint $ \underline c_t \leq C_t u_t \leq \bar c_t$ represents the constraint that the ground reaction force must lie within the friction cone and thus is realizable. Finally, matrix $D_t$ is a selection matrix enforcing the swing leg, which is not in contact with the ground, to have 0 ground reaction force. 
 
 The above MPC problem is thus formulated to search for the optimal ground reaction force based on the planned leg placement and the robot yaw dynamics, such that the actual state, i.e., the base's position and orientation, tracks the reference trajectory as closely as possible. The solution, i.e., the optimal ground reaction force, is then mapped to the joint torque commands through each leg's Jacobian matrix. 
 
